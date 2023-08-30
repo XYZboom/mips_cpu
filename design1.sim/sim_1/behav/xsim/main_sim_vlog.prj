@@ -1,0 +1,16 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  \
+"../../../../design1.srcs/sources_1/ip/data_ram/sim/data_ram.v" \
+"../../../../design1.srcs/sources_1/ip/rom_1024x32b/sim/rom_1024x32b.v" \
+"../../../../design1.srcs/CPU/ID/alu.v" \
+"../../../../design1.srcs/sim_1/new/clk_main.v" \
+"../../../../design1.srcs/sources_1/new/comparer.v" \
+"../../../../design1.srcs/CPU/main.v" \
+"../../../../design1.srcs/sources_1/new/regfile.v" \
+"../../../../design1.srcs/sim_1/new/main_sim.v" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort

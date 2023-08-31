@@ -27,6 +27,9 @@ module alu(
             12'b000000101011: alu_result = alu_src1 < alu_src2; // sltu
             // lui
             12'b001111??????: alu_result = {alu_src2[15:0], 16'b0}; // lui
+            // jump and link
+            12'b000011??????: alu_result = alu_src1;
+            12'b000000001001: alu_result = alu_src1;
             default: alu_result = 32'b0;
         endcase
     end

@@ -19,14 +19,24 @@ module main(
     wire r_type_ex = op_ex == 6'b0;
     wire [4:0] rd_ex = IR_id_ex[15:11];
     wire [4:0] rt_ex = IR_id_ex[20:16];
-    wire [4:0] target_r_ex = r_type_ex ? rd_ex : rt_ex;
+    wire jal_ex = IR_id_ex[31:26] == 6'b000011;
+    wire jalr_ex = {IR_id_ex[31:26], IR_id_ex[20:16], IR_id_ex[10:0]} == 22'b1001;
+    // 带链接的跳转
+    wire j_link_type_ex = jal_ex || jalr_ex;
+    wire [4:0] target_r_ex = j_link_type_ex ? 5'b11111 :
+                             r_type_ex ? rd_ex : rt_ex;
     
     reg  [31:0] IR_ex_mem;
     wire [5:0] op_mem = IR_ex_mem[31:26];
     wire r_type_mem = op_mem == 6'b0;
     wire [4:0] rd_mem = IR_ex_mem[15:11];
     wire [4:0] rt_mem = IR_ex_mem[20:16];
-    wire [4:0] target_r_mem = r_type_mem ? rd_mem : rt_mem;
+    wire jal_mem = IR_ex_mem[31:26] == 6'b000011;
+    wire jalr_mem = {IR_ex_mem[31:26], IR_ex_mem[20:16], IR_ex_mem[10:0]} == 22'b1001;
+    // 带链接的跳转
+    wire j_link_type_mem = jal_mem || jalr_mem;
+    wire [4:0] target_r_mem = j_link_type_mem ? 5'b11111 : 
+                            r_type_mem ? rd_mem : rt_mem;
     
     reg  [31:0] IR_mem_wb;
     wire [5:0] op_wb = IR_mem_wb[31:26];
@@ -43,9 +53,9 @@ module main(
     wire [4:0]  rs_if = inst_rom_read[25:21];
     wire [4:0]  rd_if = inst_rom_read[15:11];
     reg  [31:0] return_address_if_id;
-    reg  [31:0] ra_read_out;
+    reg  [31:0] delay_return_address_if_id;
+    wire [31:0] ra_read_out;
     always @(negedge clk) begin
-        return_address_if_id <= pc + 4;
         new_pc <= j_type_if ? j_type_addr_if :
             (is_jump_return) ? ra_read_out :
             (pc_sel && is_branch) ? new_pc + (imm_id << 2) : pc + 4;
@@ -55,6 +65,8 @@ module main(
     end
     always @(posedge clk) begin
         IR_if_id <= inst_rom_read;
+        return_address_if_id <= pc + 4;
+        delay_return_address_if_id <= return_address_if_id;
     end
     
     rom_1024x32b instruction_rom(
@@ -75,11 +87,11 @@ module main(
     reg  [31:0] imm_id_ex;
     wire jalr_id = {IR_if_id[31:26], IR_if_id[20:16], IR_if_id[10:0]} == 22'b1001;
     wire jr_id = {IR_if_id[31:26], IR_if_id[20:0]} == 27'b1000;
-    wire jal_id = IR_if_id[30:26] == 6'b000011;
+    wire jal_id = IR_if_id[31:26] == 6'b000011;
     // 带链接的跳转
     wire j_link_type_id = jal_id || jalr_id;
     
-    assign is_jump_return = jalr_id && jr_id;
+    assign is_jump_return = jalr_id || jr_id;
     // 符号位扩展
     assign imm_id = IR_if_id[15] ? {16'hffff, IR_if_id[15:0]} : {16'h0000, IR_if_id[15:0]};
     
@@ -107,11 +119,14 @@ module main(
     reg  [31:0] alu_res_ex_mem;
     wire [31:0] alu_result;
     
+    assign ra_read_out = // 如果mem段的写入目标是当前的rs，则重定向
+            (rs_id == target_r_mem && target_r_mem != 5'b0) ? alu_res_ex_mem : 
+            (rs_id == target_r_ex && target_r_ex != 5'b0) ? alu_result : rs_out_id
+            ;
     always @(posedge clk) begin
         imm_id_ex <= imm_id;
-        ra_read_out <= rs_out_id;
         // 如果是链接，则存入返回地址
-        A_id_ex <= j_link_type_id ? return_address_if_id : 
+        A_id_ex <= j_link_type_id ? delay_return_address_if_id : 
             // 如果mem段的写入目标是当前的rs，则重定向
             (rs_id == target_r_mem && target_r_mem != 5'b0) ? alu_res_ex_mem : 
             (rs_id == target_r_ex && target_r_ex != 5'b0) ? alu_result : rs_out_id
@@ -183,7 +198,7 @@ module main(
     
     // ****************** MEM ****************************
     // ------------------ WB ---------------------------
-    wire load_wb = IR_mem_wb[31:29] == 3'b100;
+    wire load_wb = IR_mem_wb[31:26] == 6'b100011;
     // I型指令操作码特征
     wire i_type_wb = 
         op_wb == 6'b001000 ||   // addi
@@ -194,13 +209,15 @@ module main(
         op_wb == 6'b001111    // lui
         ;
     wire [4:0]  rt_wb = IR_mem_wb[20:16];
-    wire jal_wb = IR_mem_wb[30:26] == 6'b000011;
-    wire jalr_wb = {IR_mem_wb[30:26], IR_mem_wb[20:16], IR_mem_wb[10:0]} == 22'b1001;
+    wire jal_wb = IR_mem_wb[31:26] == 6'b000011;
+    wire jalr_wb = {IR_mem_wb[31:26], IR_mem_wb[20:16], IR_mem_wb[10:0]} == 22'b1001;
     // 带链接的跳转
     wire j_link_type_wb = jal_wb || jalr_wb;
     assign reg_write_enable = load_wb || r_type_wb || i_type_wb || j_link_type_wb;
     assign reg_write_value = load_wb ? lmd_mem_wb : alu_res_mem_wb;
-    assign reg_write_addr = r_type_wb ? rd_wb : rt_wb;
+    // jal 与 jalr 的写入地址是ra寄存器，即31号寄存器
+    assign reg_write_addr = j_link_type_wb ? 5'b11111 :
+                            r_type_wb ? rd_wb : rt_wb;
     // ****************** WB ****************************
     // ------------------ reset ---------------------------
     always @(reset) begin

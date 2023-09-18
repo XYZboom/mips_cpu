@@ -1,7 +1,7 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.3 (win64) Build 2405991 Thu Dec  6 23:38:27 MST 2018
--- Date        : Sun Sep 10 16:15:07 2023
+-- Date        : Mon Sep 18 08:51:39 2023
 -- Host        : XYZboom running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub
 --               F:/Code/Other/vivado/cource_design/design1/design1.srcs/sources_1/ip/rom_1024x32b/rom_1024x32b_stub.vhdl

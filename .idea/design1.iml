@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/design1.cache/compile_simlib" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.cache/ip" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.cache/wt" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.sim/sim_1/behav/xsim/.Xil" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.sim/sim_1" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.cache" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.sim" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.runs/data_ram_synth_1/.Xil" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.runs/rom_1024x32b_synth_1/.Xil" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.runs/synth_1/.Xil" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.hw" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.ip_user_files" />
+      <excludeFolder url="file://$MODULE_DIR$/design1.runs" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
